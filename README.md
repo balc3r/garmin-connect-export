@@ -1,7 +1,7 @@
 garmin-connect-export
 =====================
 
-Download a copy of your Garmin Connect data, including stats and GPX tracks.
+Download a copy of your Garmin Connect data, including stats and GPX tracks. This fork has been modified from the original to support Python 3 (no backwards compatibility for 2). 
 
 Description
 -----------
@@ -22,6 +22,7 @@ usage: gcexport.py [-h] [--version] [--username [USERNAME]]
 
 optional arguments:
   -h, --help            show this help message and exit
+  -v, --verbose         increase output verbosity
   --version             print version and exit
   --username [USERNAME]
                         your Garmin Connect username (otherwise, you will be
