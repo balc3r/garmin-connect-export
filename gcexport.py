@@ -121,7 +121,7 @@ print('Welcome to Garmin Connect Exporter!')
 
 # Create directory for data files.
 if isdir(args.directory):
-	log.warning('Warning: Output directory already exists. Will skip already-downloaded files and append to the CSV file.')
+	log.warning('Output directory already exists. Will skip already-downloaded files and append to the CSV file.')
 
 username = args.username if args.username else input('Username: ')
 password = args.password if args.password else getpass()
