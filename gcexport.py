@@ -25,9 +25,11 @@ from os import remove
 from xml.dom.minidom import parseString
 from subprocess import call
 
+
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse, http.cookiejar, json
 from fileinput import filename
 
+import logging
 import argparse
 import zipfile
 
@@ -59,15 +61,28 @@ parser.add_argument('-s', '--skipvalidation',
 	help="if running in gpx format, skips the validation step",
 	action='store_true')
 
+# Debug mode not needed enough to make it part of the CLI, but want to leave the option here since
+# it may be helpful when Garmin inevitably changes their web interface
+debug = False
+
 args = parser.parse_args()
 
 if args.version:
 	print(argv[0] + ", version " + script_version)
 	exit(0)
 
+log = logging.getLogger(name='gcexport')
+logging.basicConfig() #set up a default handler so that levels < WARNING work properly
+log.setLevel(logging.INFO if args.verbose else logging.WARNING)
+
+
+print(logging.INFO)
+print(log.getEffectiveLevel())
+log.info('logging at level INFO')
+
 cookie_jar = http.cookiejar.CookieJar()
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
-# print cookie_jar
+log.debug(cookie_jar)
 
 # url is a string, post is a dictionary of POST parameters, headers is a dictionary of headers.
 def http_req(url, post=None, headers={}):
@@ -79,10 +94,10 @@ def http_req(url, post=None, headers={}):
 	if post:
 		# print "POSTING"
 		post = str.encode(urlencode(post))  # Convert dictionary to POST parameter string.
-	# print request.headers
-	# print cookie_jar
-	# print post
-	# print request
+	log.debug(request.headers)
+	log.debug(cookie_jar)
+	log.debug(post)
+	log.debug(request)
 	response = opener.open(request, data=post)  # This line may throw a urllib2.HTTPError.
 
 	# N.B. urllib2 will follow any 302 redirects. Also, the "open" call above may throw a urllib2.HTTPError which is checked for below.
@@ -93,20 +108,20 @@ def http_req(url, post=None, headers={}):
 	
 	return str(response.read(), 'utf-8')
 
-if args.verbose:
-	def verboseprint(*args):
-		print('verboseprint')
-		for arg in args:
-			print(arg, end=' ')
-		print()
-else:
-	verboseprint = lambda *a: None
+# if args.verbose:
+# 	def verboseprint(*args):
+# 		print('verboseprint')
+# 		for arg in args:
+# 			print(arg, end=' ')
+# 		print()
+# else:
+# 	verboseprint = lambda *a: None
 
 print('Welcome to Garmin Connect Exporter!')
 
 # Create directory for data files.
 if isdir(args.directory):
-	print('Warning: Output directory already exists. Will skip already-downloaded files and append to the CSV file.')
+	log.warning('Warning: Output directory already exists. Will skip already-downloaded files and append to the CSV file.')
 
 username = args.username if args.username else input('Username: ')
 password = args.password if args.password else getpass()
@@ -115,7 +130,7 @@ password = args.password if args.password else getpass()
 limit_maximum = 100
 
 hostname_url = http_req('http://connect.garmin.com/gauth/hostname')
-# print hostname_url
+log.debug(hostname_url)
 hostname = json.loads(hostname_url)['host']
 
 REDIRECT = "https://connect.garmin.com/post-auth/login"
@@ -145,7 +160,7 @@ data = {'service': REDIRECT,
     'embedWidget': 'false',
     'generateExtraServiceTicket': 'false'}
 
-verboseprint(urllib.parse.urlencode(data))
+log.debug(urllib.parse.urlencode(data))
 
 # URLs for various services.
 url_gc_login     = 'https://sso.garmin.com/sso/login?' + urllib.parse.urlencode(data)
@@ -161,47 +176,47 @@ url_gc_original_activity = 'http://connect.garmin.com/proxy/download-service/fil
 
 # Initially, we need to get a valid session cookie, so we pull the login page.
 print('Connecting to Garmin')
-verboseprint('Request login page')
+log.info('Request login page')
 http_req(url_gc_login)
-verboseprint('Finish login page')
+log.info('Finish login page')
 
 # Now we'll actually login.
 post_data = {'username': username, 'password': password, 'embed': 'true', 'lt': 'e1s1', '_eventId': 'submit', 'displayNameRequired': 'false'}  # Fields that are passed in a typical Garmin login.
-verboseprint('Post login data')
+log.info('Post login data')
 http_req(url_gc_login, post_data)
-verboseprint('Finish login post')
+log.info('Finish login post')
 
 # Get the key.
 # TODO: Can we do this without iterating? 
 login_ticket = None
-verboseprint("-------COOKIE")
+log.info("-------COOKIE")
 for cookie in cookie_jar:
-	verboseprint(cookie.name + ": " + cookie.value)
+	log.info(cookie.name + ": " + cookie.value)
 	if cookie.name == 'CASTGC':
 		login_ticket = cookie.value
-		verboseprint(login_ticket, cookie.value)
+		log.info(login_ticket)
 		break
-verboseprint("-------COOKIE")
+log.info("-------COOKIE")
 
 if not login_ticket:
 	raise Exception('Did not get a ticket cookie. Cannot log in. Did you enter the correct username and password?')
 
-# Chop of 'TGT-' off the beginning, prepend 'ST-0'.
+# Chop 'TGT-' off the beginning, prepend 'ST-0'.
 login_ticket = 'ST-0' + login_ticket[4:]
-# print login_ticket
+log.debug(login_ticket)
 
-verboseprint('Request authentication')
-# print url_gc_post_auth + 'ticket=' + login_ticket
+log.info('Request authentication')
+log.debug(url_gc_post_auth + 'ticket=' + login_ticket)
 http_req(url_gc_post_auth + 'ticket=' + login_ticket)
-verboseprint('Finished authentication')
+log.info('Finish authentication')
 
 # https://github.com/kjkjava/garmin-connect-export/issues/18#issuecomment-243859319
-verboseprint("Call modern")
+log.info("Call modern")
 http_req("http://connect.garmin.com/modern")
-verboseprint("Finish modern")
-verboseprint("Call legacy session")
+log.info("Finish modern")
+log.info("Call legacy session")
 http_req("https://connect.garmin.com/legacy/session")
-verboseprint("Finish legacy session")
+log.info("Finish legacy session")
 print('Connection complete')
 
 # We should be logged in now.
@@ -299,10 +314,10 @@ while total_downloaded < total_to_download:
 	search_params = {'start': total_downloaded, 'limit': num_to_download}
 	# Query Garmin Connect
 	print('Pulling activities')
-	verboseprint("Making activity request ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-	verboseprint(url_gc_search + urlencode(search_params))
+	log.info("Making activity request ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	log.info(url_gc_search + urlencode(search_params))
 	result = http_req(url_gc_search + urlencode(search_params))
-	verboseprint("Finished activity request ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	log.info("Finished activity request ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
 	# Persist JSON
 	json_filename = args.directory + '/activities.json'
@@ -343,7 +358,7 @@ while total_downloaded < total_to_download:
 			data_filename = args.directory + '/activity_' + str(a['activity']['activityId']) + '.gpx'
 			download_url = url_gc_gpx_activity + str(a['activity']['activityId']) + '?full=true'
 			# download_url = url_gc_gpx_activity + str(a['activity']['activityId']) + '?full=true' + '&original=true'
-			verboseprint(download_url)
+			log.info(download_url)
 			file_mode = 'w'
 			empty_gpx_flag = False
 		elif args.format == 'tcx':
