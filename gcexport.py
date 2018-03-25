@@ -63,7 +63,7 @@ parser.add_argument('-s', '--skipvalidation',
 
 # Debug mode not needed enough to make it part of the CLI, but want to leave the option here since
 # it may be helpful when Garmin inevitably changes their web interface
-debug = False
+DEBUG = False
 
 args = parser.parse_args()
 
@@ -73,7 +73,7 @@ if args.version:
 
 log = logging.getLogger(name='gcexport')
 logging.basicConfig() #set up a default handler so that levels < WARNING work properly
-log.setLevel(logging.INFO if args.verbose else logging.WARNING)
+log.setLevel(logging.DEBUG if DEBUG else logging.INFO if args.verbose else logging.WARNING)
 
 
 print(logging.INFO)
@@ -107,15 +107,6 @@ def http_req(url, post=None, headers={}):
 		raise Exception('Bad return code (' + str(response.getcode()) + ') for: ' + url)
 	
 	return str(response.read(), 'utf-8')
-
-# if args.verbose:
-# 	def verboseprint(*args):
-# 		print('verboseprint')
-# 		for arg in args:
-# 			print(arg, end=' ')
-# 		print()
-# else:
-# 	verboseprint = lambda *a: None
 
 print('Welcome to Garmin Connect Exporter!')
 
