@@ -39,7 +39,6 @@ activities_directory = './' + current_date + '_garmin_connect_export'
 
 parser = argparse.ArgumentParser()
 
-# TODO: Implement verbose and/or quiet options.
 parser.add_argument('-v', '--verbose', help="increase output verbosity", action="store_true")
 parser.add_argument('--version', help="print version and exit", action="store_true")
 parser.add_argument('--username', help="your Garmin Connect username (otherwise, you will be prompted)", nargs='?')

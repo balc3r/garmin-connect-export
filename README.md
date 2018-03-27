@@ -13,8 +13,6 @@ If you have many activities, you may find that this script crashes with an "Oper
 
 Usage
 -----
-You will need a little experience running things from the command line to use this script. That said, here are the usage details from the `--help` flag:
-
 ```
 usage: gcexport.py [-h] [--version] [--username [USERNAME]]
                    [--password [PASSWORD]] [-c [COUNT]]
@@ -41,6 +39,7 @@ optional arguments:
                         DD_garmin_connect_export')
   -u, --unzip           if downloading ZIP files (format: 'original'), unzip
                         the file and removes the ZIP file
+  -s, --skipvalidation  if running in gpxc format, skips the validation step
 ```
 
 Examples:
@@ -50,11 +49,9 @@ Examples:
 
 Alternatively, you may run it with `./gcexport.py` if you set the file as executable (i.e., `chmod u+x gcexport.py`).
 
-Of course, you must have Python installed to run this. Most Mac and Linux users should already have it. Also, as stated above, you should have some basic command line experience.
-
 Data
 ----
-This tool is not guaranteed to get all of your data, or even download it correctly. I have only tested it out on my account and it works fine, but different account settings or different data types could potentially cause problems. Also, because this is not an official feature of Garmin Connect, Garmin may very well make changes that break this utility (and they certainly have since I created this project).
+Because this is not an official feature of Garmin Connect, Garmin may very well make changes that break this utility.
 
 If you want to see all of the raw data that Garmin hands to this script, just print out the contents of the `json_results` variable. I believe most everything that is useful has been included in the CSV file. You will notice some columns have been duplicated: one column geared towards display, and another column fit for number crunching (labeled with "Raw"). I hope this is most useful. Some information is missing, such as "Favorite" or "Avg Strokes."  This is available from the web interface, but is not included in data given to this script.
 
@@ -66,7 +63,7 @@ This script is for personal use only. It simulates a standard user session (i.e.
 
 History
 -------
-The original project was written in PHP (now in the `old` directory), based on "Garmin Connect export to Dailymile" code at http://www.ciscomonkey.net/gc-to-dm-export/ (link has been down for a while). It no longer works due to the way Garmin handles logins. It could be updated, but I decided to rewrite everything in Python for the latest version.
+The original project was written in PHP, based on "Garmin Connect export to Dailymile" code at http://www.ciscomonkey.net/gc-to-dm-export/ (link has been down for a while). The script was originally written in Python by @kjkjava [here](https://github.com/kjkjava/garmin-connect-export), but is no longer being maintained. 
 
 Contributions
 -------------
