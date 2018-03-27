@@ -75,11 +75,6 @@ log = logging.getLogger(name='gcexport')
 logging.basicConfig() #set up a default handler so that levels < WARNING work properly
 log.setLevel(logging.DEBUG if DEBUG else logging.INFO if args.verbose else logging.WARNING)
 
-
-print(logging.INFO)
-print(log.getEffectiveLevel())
-log.info('logging at level INFO')
-
 cookie_jar = http.cookiejar.CookieJar()
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
 log.debug(cookie_jar)
